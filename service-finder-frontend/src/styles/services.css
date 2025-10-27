@@ -1,0 +1,169 @@
+/* página geral com fundo verde */
+.services-page {
+    min-height: 100vh;
+    background: #22c55e; /* verde */
+    padding: 24px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    box-sizing: border-box;
+    color: #111;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+}
+
+/* topo: botão voltar + busca */
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+}
+
+.icon-back {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #1f2937; /* cinza escuro */
+    color: #fff;
+    font-size: 18px;
+    line-height: 34px;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+}
+
+.search {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.search input {
+    width: min(680px, 90vw);
+    height: 40px;
+    border-radius: 22px;
+    border: none;
+    padding: 0 14px;
+    background: #f3f4f6;
+    box-shadow: inset 0 0 0 1px #e5e7eb;
+    outline: none;
+}
+
+.icon-search {
+    width: 40px;
+    height: 40px;
+    border-radius: 22px;
+    border: none;
+    background: #f3f4f6;
+    box-shadow: inset 0 0 0 1px #e5e7eb;
+    cursor: pointer;
+}
+
+/* painel principal (cinza bem escuro com bordas arredondadas) */
+.panel {
+    background: #374151;
+    border-radius: 18px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 16px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+}
+
+/* filtros (caixa clara com moldura azul) */
+.filters {
+    background: #2d2f31;
+    border-radius: 12px;
+    padding: 14px;
+    color: #fff;
+    position: relative;
+}
+
+.filters-title {
+    display: inline-block;
+    background: #fff;
+    color: #111;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 8px 16px;
+    margin-bottom: 8px;
+}
+
+.filters-box {
+    background: #fff;
+    color: #111;
+    border: 2px solid #3b82f6; /* azul */
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.filters-box h4 {
+    margin: 0 0 8px 0;
+    font-size: 15px;
+}
+
+.filters-box label {
+    display: block;
+    font-size: 14px;
+    margin: 3px 0;
+}
+
+/* resultados (cards verdes arredondados) */
+.results {
+    background: #f3f4f6;
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.result-card {
+    background: #2ea44f; /* verde mais escuro */
+    border-radius: 16px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+/* avatar redondo com iniciais */
+.avatar-circle {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #fff; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 2px #e5e7eb inset;
+}
+.avatar-initial { font-weight: 800; color: #374151; }
+
+/* badges brancas arredondadas */
+.info { display: flex; flex-wrap: wrap; gap: 6px; }
+.badge {
+    background: #fff; color: #111; border-radius: 999px; padding: 4px 10px; font-size: 12px;
+}
+.name { font-weight: 700; }
+.role { }
+.price { }
+.phone { }
+
+.cta .btn-call {
+    background: #fff; border: 1px solid #1f2937; color: #1f2937;
+    padding: 6px 12px; border-radius: 8px; font-weight: 700; cursor: pointer;
+}
+.cta .btn-call:hover { background: #f9fafb; }
+
+/* espaço para “lista continuar” como no mock */
+.results-placeholder { height: 120px; }
+
+/* rodapé */
+.footer {
+    display: flex; justify-content: space-between; align-items: center;
+    color: #000; padding: 6px 6px 2px 6px;
+}
+.brand { font-weight: 700; line-height: 1.1; }
+.contact { display: flex; gap: 8px; align-items: center; }
+.emoji { font-size: 18px; }
+
+@media (max-width: 960px) {
+    .panel { grid-template-columns: 1fr; }
+}
