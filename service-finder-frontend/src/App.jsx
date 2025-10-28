@@ -3,7 +3,7 @@ import Login from "./pages/Login";
 import Services from "./pages/Services";
 
 export default function App() {
-  const [screen, setScreen] = useState("login"); // 'login' | 'services'
+  const [screen, setScreen] = useState("login");
 
   const handleLogin = () => setScreen("services");
   const handleBackToLogin = () => setScreen("login");

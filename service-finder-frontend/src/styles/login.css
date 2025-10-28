@@ -1,7 +1,7 @@
-/* ocupa a viewport e centraliza tudo */
 .page {
   min-height: 100vh;
-  background-color: #d1d5db; /* cinza */
+  width: 200vh;
+  background-color: #d1d5db;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,7 +17,6 @@
   letter-spacing: 2px;
 }
 
-/* Card verde com borda branca (mock) */
 .auth-card {
   background-color: #22c55e;
   border: 2px solid #fff;
