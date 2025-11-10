@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "../styles/login.css";
 
+const DEV_BYPASS_AUTH = true; // <- enquanto a API não funciona, deixa true
+
 export default function Login({ onLogin, apiBase = "/api/v1" }) {
     const [mode, setMode] = useState("login");
     const [loading, setLoading] = useState(false);
@@ -15,6 +17,13 @@ export default function Login({ onLogin, apiBase = "/api/v1" }) {
     async function handleSubmit(e) {
         e.preventDefault();
         setError("");
+
+        // MODO DEV: ignora API e entra direto na aplicação
+        if (DEV_BYPASS_AUTH) {
+            onLogin?.();
+            return;
+        }
+
         setLoading(true);
 
         try {
