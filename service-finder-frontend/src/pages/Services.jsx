@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../styles/services.css";
 
-export default function Services({ onBack, onOpenService, apiBase = "http://localhost:8080/api/v1" }) {
+export default function Services({onBack, onOpenService, onOpenMyServices, onOpenProfile, apiBase = "http://localhost:8080/api/v1"}) {  // CHANGE API ENDPOINT IP
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [posts, setPosts] = useState([]);
@@ -152,7 +152,11 @@ export default function Services({ onBack, onOpenService, apiBase = "http://loca
         <div className="services-page">
             <div className="services-wrapper">
                 <div className="topbar">
-                    <button className="icon-back" onClick={onBack} aria-label="Voltar">←</button>
+                    <button className="icon-back" onClick={onBack}>←</button>
+                    <div className="nav-buttons">
+                        <button className="btn-nav" onClick={onOpenMyServices}>Meus serviços</button>
+                        <button className="btn-nav" onClick={onOpenProfile}>Meu perfil</button>
+                    </div>
                     <div className="search">
                         <input
                             type="text"
@@ -160,7 +164,7 @@ export default function Services({ onBack, onOpenService, apiBase = "http://loca
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                         />
-                        <button className="icon-search" aria-label="Buscar">🔍</button>
+                        <button className="icon-search">🔍</button>
                     </div>
                 </div>
 

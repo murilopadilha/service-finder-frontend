@@ -3,7 +3,7 @@ import "../styles/login.css";
 
 const DEV_BYPASS_AUTH = true; // <- enquanto a API não funciona, deixa true
 
-export default function Login({ onLogin, apiBase = "/api/v1" }) {
+export default function Login({ onLogin, apiBase = "/api/v1" }) {  // CHANGE API ENDPOINT IP
     const [mode, setMode] = useState("login");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -50,7 +50,7 @@ export default function Login({ onLogin, apiBase = "/api/v1" }) {
                 const data = await safeJson(res);
                 if (!res.ok) throw new Error(msgFrom(res.status, data) || "Falha no cadastro");
 
-                const resLogin = await req(`${apiBase}/login`, {
+                const resLogin = await req(`${apiBase}/login`, {   
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, password }),

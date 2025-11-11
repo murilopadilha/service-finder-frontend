@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../styles/service.css";
 
-export default function Service({ id, onBack, apiBase = "http://localhost:8080/api/v1" }) {
+export default function Service({ id, onBack, apiBase = "http://localhost:8080/api/v1" }) {    // CHANGE API ENDPOINT IP
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [posting, setPosting] = useState(null);
@@ -26,7 +26,7 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
             setLoading(true);
             setError("");
             try {
-                const r = await fetch(`${apiBase}/postings/${id}`);
+                const r = await fetch(`${apiBase}/postings/${id}`);       
                 const raw = await r.text();
                 const j = raw ? JSON.parse(raw) : null;
                 if (!cancelled) setPosting(j);
@@ -49,7 +49,7 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
                 const providerId = posting?.ProviderID ?? posting?.providerId;
                 if (providerId && !cancelled) {
                     try {
-                        const r = await fetch(`${apiBase}/me?userId=${encodeURIComponent(providerId)}`);
+                        const r = await fetch(`${apiBase}/me?userId=${encodeURIComponent(providerId)}`);    
                         const raw = await r.text();
                         const j = raw ? JSON.parse(raw) : null;
                         if (!cancelled) setProvider(j);
@@ -59,7 +59,7 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
                 const uid = localStorage.getItem("sf:userId");
                 if (uid && !cancelled) {
                     try {
-                        const r = await fetch(`${apiBase}/me?userId=${encodeURIComponent(uid)}`);
+                        const r = await fetch(`${apiBase}/me?userId=${encodeURIComponent(uid)}`);   
                         const raw = await r.text();
                         const j = raw ? JSON.parse(raw) : null;
                         if (!cancelled) setCurrentUser(j);
@@ -79,7 +79,7 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
         let cancelled = false;
         async function loadExistingOrder() {
             try {
-                const r = await fetch(`${apiBase}/orders/mine`);
+                const r = await fetch(`${apiBase}/orders/mine`);   
                 const raw = await r.text();
                 const data = raw ? JSON.parse(raw) : [];
                 const arr = Array.isArray(data) ? data : data?.content || [];
@@ -212,7 +212,7 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
 
     async function reloadOrderById(orderId) {
         try {
-            const r = await fetch(`${apiBase}/orders/${orderId}`);
+            const r = await fetch(`${apiBase}/orders/${orderId}`);     
             const raw = await r.text();
             const j = raw ? JSON.parse(raw) : null;
             setOrder(j);
@@ -239,7 +239,7 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
         }
         setOrderLoading(true);
         try {
-            const r = await fetch(`${apiBase}/orders/${order.ID ?? order.id}/accept`, {
+            const r = await fetch(`${apiBase}/orders/${order.ID ?? order.id}/accept`, {       
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ scheduledAt: iso })
@@ -263,7 +263,7 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
         setFlashMessage("");
         setOrderLoading(true);
         try {
-            const r = await fetch(`${apiBase}/orders/${order.ID ?? order.id}/start`, {
+            const r = await fetch(`${apiBase}/orders/${order.ID ?? order.id}/start`, {       
                 method: "POST"
             });
             if (!r.ok) {
@@ -285,7 +285,7 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
         setFlashMessage("");
         setOrderLoading(true);
         try {
-            const r = await fetch(`${apiBase}/orders/${order.ID ?? order.id}/cancel`, {
+            const r = await fetch(`${apiBase}/orders/${order.ID ?? order.id}/cancel`, {     
                 method: "POST"
             });
             if (!r.ok) {
@@ -307,7 +307,7 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
         setFlashMessage("");
         setOrderLoading(true);
         try {
-            const r = await fetch(`${apiBase}/orders/${order.ID ?? order.id}/complete`, {
+            const r = await fetch(`${apiBase}/orders/${order.ID ?? order.id}/complete`, {       
                 method: "POST"
             });
             if (!r.ok) {
