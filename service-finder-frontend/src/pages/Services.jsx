@@ -1,22 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../styles/services.css";
 
-export default function Services({ onBack, onOpen, apiBase = "http://10.62.14.40:8080/api/v1" }) {
+export default function Services({ onBack, onOpenService, apiBase = "http://localhost:8080/api/v1" }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [posts, setPosts] = useState([]);
 
-    const [query, setQuery] = useState("");
+    const [search, setSearch] = useState("");
     const [category, setCategory] = useState("");
     const [city, setCity] = useState("");
     const [district, setDistrict] = useState("");
-    const [priceMin, setPriceMin] = useState("");
-    const [priceMax, setPriceMax] = useState("");
+    const [minPrice, setMinPrice] = useState("");
+    const [maxPrice, setMaxPrice] = useState("");
     const [minRating, setMinRating] = useState("");
     const [sortBy, setSortBy] = useState("relevance");
 
-    const [visibleCount, setVisibleCount] = useState(10);
-    const [sentinelRef, setSentinelRef] = useState(null);
+    const [page, setPage] = useState(1);
+    const pageSize = 6;
 
     useEffect(() => {
         let cancelled = false;
@@ -24,7 +24,27 @@ export default function Services({ onBack, onOpen, apiBase = "http://10.62.14.40
             setError("");
             setLoading(true);
             try {
-                const r = await fetch(`${apiBase}/postings`);
+                const params = new URLSearchParams();
+                if (search.trim()) params.set("q", search.trim());
+                if (city.trim()) params.set("city", city.trim());
+                if (category.trim()) params.set("category", category.trim());
+                if (district.trim()) params.set("district", district.trim());
+                if (minPrice) params.set("price_min", String(Number(minPrice) || 0));
+                if (maxPrice) params.set("price_max", String(Number(maxPrice) || 0));
+                if (minRating) params.set("rating_min", String(Number(minRating) || 0));
+                if (sortBy === "price-asc") {
+                    params.set("sort", "price");
+                    params.set("order", "asc");
+                } else if (sortBy === "price-desc") {
+                    params.set("sort", "price");
+                    params.set("order", "desc");
+                } else if (sortBy === "rating-desc") {
+                    params.set("sort", "rating");
+                    params.set("order", "desc");
+                }
+                const qs = params.toString();
+                const url = qs ? `${apiBase}/postings?${qs}` : `${apiBase}/postings`;
+                const r = await fetch(url);
                 const raw = await r.text();
                 const data = raw ? JSON.parse(raw) : [];
                 const arr = Array.isArray(data) ? data : data?.content || [];
@@ -36,150 +56,111 @@ export default function Services({ onBack, onOpen, apiBase = "http://10.62.14.40
             }
         }
         load();
-        return () => { cancelled = true; };
-    }, [apiBase]);
+        return () => {
+            cancelled = true;
+        };
+    }, [apiBase, search, city, category, district, minPrice, maxPrice, minRating, sortBy]);
 
     const normalized = useMemo(() => {
         return posts.map(p => {
             const priceRaw = p.price ?? p.Price ?? 0;
-            const priceVal = typeof priceRaw === "number" && priceRaw >= 1000 ? priceRaw / 100 : Number(priceRaw) || 0;
-            const price = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(priceVal);
-            const city = p.city ?? p.City ?? "";
-            const district = p.district ?? p.District ?? "";
-            const title = p.Title ?? p.title ?? p.Category ?? p.category ?? "";
-            const name = p.ProviderName ?? p.providerName ?? p.ProviderID ?? p.providerId ?? "";
+            const priceNumber = Number(priceRaw) || 0;
+            const priceLabel = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(priceNumber);
+            const title = p.Title ?? p.title ?? "";
+            const description = p.Description ?? p.description ?? "";
+            const city = p.City ?? p.city ?? "";
+            const district = p.District ?? p.district ?? "";
+            const category = p.Category ?? p.category ?? "";
+            const rating = p.Rating ?? p.rating ?? 0;
+            const createdAt = p.CreatedAt ?? p.createdAt ?? "";
+            const createdTime = createdAt ? Date.parse(createdAt) || 0 : 0;
             const id = p.ID || p.id || Math.random().toString(36).slice(2);
-            const category = p.category ?? p.Category ?? "";
-            const desc = p.description ?? p.Description ?? "";
-            const rating = typeof p.rating === "number"
-                ? p.rating
-                : typeof p.Rating === "number"
-                    ? p.Rating
-                    : 4.8; 
-
-            return { id, price, priceValue: priceVal, city, district, title, name, category, desc, rating };
+            const providerId = p.ProviderID ?? p.providerId ?? "";
+            return { id, title, description, city, district, category, priceNumber, priceLabel, rating, createdTime, providerId };
         });
     }, [posts]);
 
     const filteredSorted = useMemo(() => {
         let arr = normalized;
 
-        const q = query.trim().toLowerCase();
-        if (q) {
-            arr = arr.filter(item =>
-                item.title.toLowerCase().includes(q) ||
-                item.desc.toLowerCase().includes(q) ||
-                item.name.toLowerCase().includes(q)
-            );
+        if (minRating) {
+            const minR = Number(minRating) || 0;
+            arr = arr.filter(n => (n.rating || 0) >= minR);
         }
 
-        if (category) {
-            arr = arr.filter(item => item.category === category);
-        }
+        const q = search.trim().toLowerCase();
 
-        if (city.trim()) {
-            const c = city.trim().toLowerCase();
-            arr = arr.filter(item => item.city.toLowerCase().includes(c));
-        }
-
-        if (district.trim()) {
-            const d = district.trim().toLowerCase();
-            arr = arr.filter(item => item.district.toLowerCase().includes(d));
-        }
-
-        const min = priceMin !== "" ? Number(priceMin) : NaN;
-        const max = priceMax !== "" ? Number(priceMax) : NaN;
-
-        if (!Number.isNaN(min)) {
-            arr = arr.filter(item => item.priceValue >= min);
-        }
-        if (!Number.isNaN(max)) {
-            arr = arr.filter(item => item.priceValue <= max);
-        }
-
-        const minRate = minRating !== "" ? Number(minRating) : NaN;
-        if (!Number.isNaN(minRate)) {
-            arr = arr.filter(item => (item.rating ?? 0) >= minRate);
-        }
-
-        const sorted = [...arr];
-        switch (sortBy) {
-            case "price-asc":
-                sorted.sort((a, b) => a.priceValue - b.priceValue);
-                break;
-            case "price-desc":
-                sorted.sort((a, b) => b.priceValue - a.priceValue);
-                break;
-            case "rating":
-                sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-                break;
-            case "relevance":
-            default:
-                // mantém ordem original da API
-                break;
-        }
-
-        return sorted;
-    }, [normalized, query, category, city, district, priceMin, priceMax, minRating, sortBy]);
-
-    useEffect(() => {
-        setVisibleCount(10);
-    }, [query, category, city, district, priceMin, priceMax, minRating, sortBy]);
-
-    useEffect(() => {
-        if (!sentinelRef) return;
-        if (filteredSorted.length <= visibleCount) return;
-
-        const observer = new IntersectionObserver(entries => {
-            if (entries[0].isIntersecting) {
-                setVisibleCount(prev => Math.min(prev + 10, filteredSorted.length));
+        const withScore = arr.map(n => {
+            let score = 0;
+            if (q) {
+                const t = n.title.toLowerCase();
+                const d = n.description.toLowerCase();
+                if (t.startsWith(q)) score += 40;
+                if (t.includes(q)) score += 25;
+                if (d.includes(q)) score += 15;
             }
+            score += (n.rating || 0) * 10;
+            score += n.createdTime / 1000000000000;
+            return { ...n, score };
         });
 
-        observer.observe(sentinelRef);
-        return () => observer.disconnect();
-    }, [sentinelRef, filteredSorted.length, visibleCount]);
+        const sorted = [...withScore].sort((a, b) => {
+            if (sortBy === "price-asc") {
+                return a.priceNumber - b.priceNumber;
+            }
+            if (sortBy === "price-desc") {
+                return b.priceNumber - a.priceNumber;
+            }
+            if (sortBy === "rating-desc") {
+                return (b.rating || 0) - (a.rating || 0);
+            }
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            return b.createdTime - a.createdTime;
+        });
 
-    const visibleItems = filteredSorted.slice(0, visibleCount);
+        return sorted;
+    }, [normalized, search, minRating, sortBy]);
+
+    const visible = useMemo(() => {
+        return filteredSorted.slice(0, page * pageSize);
+    }, [filteredSorted, page, pageSize]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, city, category, district, minPrice, maxPrice, minRating, sortBy]);
+
+    useEffect(() => {
+        function onScroll() {
+            if (filteredSorted.length === 0) return;
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+                setPage(prev => {
+                    const maxPage = Math.ceil(filteredSorted.length / pageSize);
+                    if (prev >= maxPage) return prev;
+                    return prev + 1;
+                });
+            }
+        }
+        window.addEventListener("scroll", onScroll);
+        return () => {
+            window.removeEventListener("scroll", onScroll);
+        };
+    }, [filteredSorted.length, pageSize]);
 
     return (
         <div className="services-page">
             <div className="services-wrapper">
                 <div className="topbar">
-                    <button className="icon-back" style={{ color: "#000" }} onClick={onBack} aria-label="Voltar">
-                        ←
-                    </button>
-
+                    <button className="icon-back" onClick={onBack} aria-label="Voltar">←</button>
                     <div className="search">
                         <input
                             type="text"
-                            style={{ color: "#000" }}
                             placeholder="Digite aqui o serviço que deseja procurar..."
-                            value={query}
-                            onChange={e => setQuery(e.target.value)}
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
                         />
-                        <button
-                            className="icon-search"
-                            aria-label="Buscar"
-                            type="button"
-                            onClick={() => setVisibleCount(10)}
-                        >
-                            🔍
-                        </button>
-                    </div>
-
-                    <div className="sort">
-                        <label htmlFor="sort">Ordenar por:</label>
-                        <select
-                            id="sort"
-                            value={sortBy}
-                            onChange={e => setSortBy(e.target.value)}
-                        >
-                            <option value="relevance">Relevância</option>
-                            <option value="price-asc">Menor preço</option>
-                            <option value="price-desc">Maior preço</option>
-                            <option value="rating">Melhor avaliação</option>
-                        </select>
+                        <button className="icon-search" aria-label="Buscar">🔍</button>
                     </div>
                 </div>
 
@@ -187,122 +168,93 @@ export default function Services({ onBack, onOpen, apiBase = "http://10.62.14.40
                     <aside className="filters">
                         <div className="filters-title">FILTRAR BUSCA</div>
                         <div className="filters-box">
-                            <h4>Tipos de Serviço</h4>
-
-                            <label>
+                            <div className="filters-field">
+                                <span className="filters-label">Categoria</span>
                                 <input
-                                    type="radio"
-                                    name="category"
-                                    checked={category === ""}
-                                    onChange={() => setCategory("")}
-                                />
-                                Todos
-                            </label>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    checked={category === "Serviços gerais"}
-                                    onChange={() => setCategory("Serviços gerais")}
-                                />
-                                Serviços gerais
-                            </label>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    checked={category === "Automação Residencial"}
-                                    onChange={() => setCategory("Automação Residencial")}
-                                />
-                                Automação Residencial
-                            </label>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    checked={category === "Carpinteiro"}
-                                    onChange={() => setCategory("Carpinteiro")}
-                                />
-                                Carpinteiro
-                            </label>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    checked={category === "Consultoria Financeira"}
-                                    onChange={() => setCategory("Consultoria Financeira")}
-                                />
-                                Consultoria Financeira
-                            </label>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    checked={category === "Designer Gráfico"}
-                                    onChange={() => setCategory("Designer Gráfico")}
-                                />
-                                Designer Gráfico
-                            </label>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    checked={category === "Eletricista"}
-                                    onChange={() => setCategory("Eletricista")}
-                                />
-                                Eletricista
-                            </label>
-
-                            <h4 style={{ marginTop: 16 }}>Localização</h4>
-                            <label>Cidade</label>
-                            <input
-                                type="text"
-                                placeholder="Ex.: Porto Alegre"
-                                value={city}
-                                onChange={e => setCity(e.target.value)}
-                            />
-                            <label>Bairro</label>
-                            <input
-                                type="text"
-                                placeholder="Ex.: Centro"
-                                value={district}
-                                onChange={e => setDistrict(e.target.value)}
-                            />
-
-                            <h4 style={{ marginTop: 16 }}>Faixa de Preço (R$)</h4>
-                            <div className="price-range">
-                                <input
-                                    type="number"
-                                    min="0"
-                                    placeholder="Mín."
-                                    value={priceMin}
-                                    onChange={e => setPriceMin(e.target.value)}
-                                />
-                                <span>até</span>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    placeholder="Máx."
-                                    value={priceMax}
-                                    onChange={e => setPriceMax(e.target.value)}
+                                    type="text"
+                                    placeholder="Ex: Eletricista"
+                                    value={category}
+                                    onChange={e => setCategory(e.target.value)}
                                 />
                             </div>
 
-                            <h4 style={{ marginTop: 16 }}>Avaliação mínima</h4>
-                            <select
-                                value={minRating}
-                                onChange={e => setMinRating(e.target.value)}
-                            >
-                                <option value="">Qualquer</option>
-                                <option value="3">3.0+</option>
-                                <option value="4">4.0+</option>
-                                <option value="4.5">4.5+</option>
-                                <option value="5">5.0</option>
-                            </select>
+                            <div className="filters-field">
+                                <span className="filters-label">Cidade</span>
+                                <input
+                                    type="text"
+                                    placeholder="Ex: Porto Alegre"
+                                    value={city}
+                                    onChange={e => setCity(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="filters-field">
+                                <span className="filters-label">Bairro</span>
+                                <input
+                                    type="text"
+                                    placeholder="Ex: Centro"
+                                    value={district}
+                                    onChange={e => setDistrict(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="filters-range-row">
+                                <div className="filters-field">
+                                    <span className="filters-label">Preço mín. (R$)</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={minPrice}
+                                        onChange={e => setMinPrice(e.target.value)}
+                                    />
+                                </div>
+                                <div className="filters-field">
+                                    <span className="filters-label">Preço máx. (R$)</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={maxPrice}
+                                        onChange={e => setMaxPrice(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="filters-field">
+                                <span className="filters-label">Nota mínima</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="5"
+                                    step="0.5"
+                                    value={minRating}
+                                    onChange={e => setMinRating(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="filters-field">
+                                <span className="filters-label">Ordenar por</span>
+                                <select
+                                    value={sortBy}
+                                    onChange={e => setSortBy(e.target.value)}
+                                >
+                                    <option value="relevance">Relevância</option>
+                                    <option value="price-asc">Preço: menor para maior</option>
+                                    <option value="price-desc">Preço: maior para menor</option>
+                                    <option value="rating-desc">Melhor avaliação</option>
+                                </select>
+                            </div>
                         </div>
                     </aside>
 
                     <section className="results">
+                        <div className="results-header">
+                            <div className="results-count">
+                                {filteredSorted.length === 0
+                                    ? "Nenhum serviço encontrado"
+                                    : `Mostrando ${visible.length} de ${filteredSorted.length} serviços`}
+                            </div>
+                        </div>
+
                         {loading && (
                             <article className="result-card">
                                 <div className="info">
@@ -319,55 +271,34 @@ export default function Services({ onBack, onOpen, apiBase = "http://10.62.14.40
                             </article>
                         )}
 
-                        {!loading && !error && visibleItems.length === 0 && (
-                            <article className="result-card">
-                                <div className="info">
-                                    <div className="badge name">Nenhum serviço encontrado</div>
-                                </div>
-                            </article>
-                        )}
-
-                        {!loading && !error && visibleItems.map(item => (
-                            <article
-                                className="result-card"
-                                key={item.id}
-                                onClick={() => onOpen(item.id)}
-                            >
+                        {!loading && !error && visible.map(item => (
+                            <article className="result-card" key={item.id}>
                                 <div className="avatar">
                                     <div className="avatar-circle">
                                         <span className="avatar-initial">
-                                            {String(item.name || "?").charAt(0).toUpperCase()}
+                                            {String(item.title || "?").charAt(0).toUpperCase()}
                                         </span>
                                     </div>
                                 </div>
                                 <div className="info">
-                                    <div className="badge name">{item.name}</div>
-                                    <div className="badge role">{item.title}</div>
-                                    <div className="badge price">{item.price}</div>
+                                    <div className="badge name">{item.title}</div>
+                                    <div className="badge role">{item.category || "Serviço"}</div>
+                                    <div className="badge price">{item.priceLabel}</div>
                                     <div className="badge phone">
                                         {item.city}
-                                        {item.district ? ` - ${item.district}` : ""}
+                                        {item.district ? ` • ${item.district}` : ""}
                                     </div>
-                                    {item.rating && (
-                                        <div className="badge rating">⭐ {item.rating.toFixed(1)}</div>
-                                    )}
                                 </div>
                                 <div className="cta">
                                     <button
                                         className="btn-call"
-                                        type="button"
-                                        onClick={e => {
-                                            e.stopPropagation();
-                                            onOpen(item.id);
-                                        }}
+                                        onClick={() => onOpenService && onOpenService(item.id)}
                                     >
                                         VER DETALHES
                                     </button>
                                 </div>
                             </article>
                         ))}
-
-                        <div ref={setSentinelRef} className="results-sentinel" />
                     </section>
                 </div>
 
