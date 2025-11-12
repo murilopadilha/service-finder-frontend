@@ -8,7 +8,7 @@ import Profile from "./pages/Profile";
 export default function App() {
     const [screen, setScreen] = useState("login");
     const [selectedServiceId, setSelectedServiceId] = useState(null);
-    const apiBase = "http://localhost:8080/api/v1"; // CHANGE API ENDPOINT IP
+    const apiBase = "http://10.49.82.111:8080/api/v1"; // CHANGE API ENDPOINT IP
 
     function goLogin() {
         setScreen("login");

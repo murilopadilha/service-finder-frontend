@@ -1,31 +1,107 @@
+/* estrutura geral */
 .services-page {
     min-height: 100vh;
-    width: 100vw;            
+    width: 100%;
     background: #22c55e;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     padding: 24px 0;
     box-sizing: border-box;
+    color: #000;
 }
 
 .services-wrapper {
     width: 100%;
     max-width: 1200px;
-    background: transparent;
     display: flex;
     flex-direction: column;
     gap: 18px;
     padding: 0 20px;
     box-sizing: border-box;
+    min-height: 100vh;
 }
 
+/* barra do topo fica estática */
 .topbar {
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 12px;
 }
+
+/* painel ocupa o restante da altura da tela */
+.panel {
+    background: #374151;
+    border-radius: 18px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 320px 1fr; /* filtro fixo + resultados flexíveis */
+    gap: 16px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+
+    /* chave para permitir overflow interno dos filhos */
+    flex: 1;
+    min-height: 0;
+}
+
+/* opcional: filtro com scroll próprio se crescer demais */
+.filters {
+    background: #2d2f31;
+    border-radius: 12px;
+    padding: 14px;
+    color: #fff;
+    position: relative;
+
+    /* permite rolar o filtro separadamente se precisar */
+    overflow-y: auto;
+    min-height: 0;
+    max-height: calc(100vh - 220px);
+}
+
+/* a área de resultados é a ÚNICA com scroll */
+.results {
+    background: #f3f4f6;
+    border-radius: 12px;
+    padding: 14px;
+
+    overflow-y: auto;     /* <- scroll aqui */
+    min-height: 0;        /* importante dentro de grid/flex */
+    max-height: calc(100vh - 220px); /* ajusta altura visível */
+}
+
+/* cabeçalho dos resultados pode “colar” no topo da área rolável */
+.results-header {
+    position: sticky;
+    top: 0;
+    background: #f3f4f6;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    z-index: 1;
+}
+
+/* cartões, etc. (mantém seu estilo atual) */
+.result-card {
+    background: #2ea44f;
+    border-radius: 16px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+/* responsivo */
+@media (max-width: 960px) {
+    .panel {
+        grid-template-columns: 1fr;
+    }
+    .filters, .results {
+        max-height: calc(100vh - 220px);
+    }
+}
+
 
 .icon-back {
     width: 34px;
@@ -102,24 +178,6 @@
     color: #111827;
 }
 
-.panel {
-    background: #374151;
-    border-radius: 18px;
-    padding: 16px;
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 16px;
-    box-shadow: 0 10px 24px rgba(0,0,0,0.2);
-}
-
-.filters {
-    background: #2d2f31;
-    border-radius: 12px;
-    padding: 14px;
-    color: #fff;
-    position: relative;
-}
-
 .filters-title {
     display: inline-block;
     background: #fff;
@@ -173,31 +231,11 @@
     font-size: 13px;
 }
 
-.results {
-    background: #f3f4f6;
-    border-radius: 12px;
-    padding: 14px;
-}
-
-.result-card {
-    background: #2ea44f;
-    border-radius: 16px;
-    padding: 20px;
-    display: flex;                     
-    align-items: center;
-    justify-content: center;           
-    margin-bottom: 16px;
-    min-height: 100px;                 
-    width: 100%;                       
-    box-sizing: border-box;
-    text-align: center;
-}
-
 .result-card .info {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    margin: 10px;
 }
 
 .result-card .badge.name {

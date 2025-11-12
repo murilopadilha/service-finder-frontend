@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import "../styles/login.css";
 
-const DEV_BYPASS_AUTH = true; // <- enquanto a API não funciona, deixa true
+const DEV_BYPASS_AUTH = false; // <- enquanto a API não funciona, deixa true
 
-export default function Login({ onLogin, apiBase = "/api/v1" }) {  // CHANGE API ENDPOINT IP
+export default function Login({ onLogin, apiBase = "http://10.49.82.111:8080/api/v1" }) {  // CHANGE API ENDPOINT IP
     const [mode, setMode] = useState("login");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -28,7 +28,7 @@ export default function Login({ onLogin, apiBase = "/api/v1" }) {  // CHANGE API
 
         try {
             if (isLogin) {
-                const res = await req(`http://10.62.14.40:8080/api/v1/login`, {
+                const res = await req(`${apiBase}/login`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, password }),
@@ -41,7 +41,7 @@ export default function Login({ onLogin, apiBase = "/api/v1" }) {  // CHANGE API
                 if (userId) localStorage.setItem("sf:userId", String(userId));
                 onLogin?.();
             } else {
-                const res = await req(`http://10.62.14.40:8080/api/v1/users`, {
+                const res = await req(`${apiBase}/users`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ name, email, password, role }),

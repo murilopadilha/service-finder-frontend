@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../styles/service.css";
 
-export default function Profile({ onBack, apiBase = "http://localhost:8080/api/v1" }) {
+export default function Profile({ onBack, apiBase = "http://10.49.82.111:8080/api/v1" }) {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");

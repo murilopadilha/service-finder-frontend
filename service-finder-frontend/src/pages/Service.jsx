@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../styles/service.css";
 
-export default function Service({ id, onBack, apiBase = "http://localhost:8080/api/v1" }) {    // CHANGE API ENDPOINT IP
+export default function Service({ id, onBack, apiBase = "http://10.49.82.111:8080/api/v1" }) {    // CHANGE API ENDPOINT IP
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [posting, setPosting] = useState(null);
@@ -19,6 +19,10 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
     const [acceptTime, setAcceptTime] = useState("");
 
     const [flashMessage, setFlashMessage] = useState("");
+
+    function getUid() {
+        return localStorage.getItem("sf:userId") || "";
+    }
 
     useEffect(() => {
         let cancelled = false;
@@ -106,6 +110,8 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
         if (!posting) return null;
         const title = posting.Title ?? posting.title ?? "";
         const desc = posting.Description ?? posting.description ?? "";
+        const postingId = posting.postingId;
+        const providerId = posting.provierId;
         const city = posting.City ?? posting.city ?? "";
         const district = posting.District ?? posting.district ?? "";
         const category = posting.Category ?? posting.category ?? "";
@@ -114,7 +120,7 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
         const price = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(priceVal);
         const created = posting.CreatedAt ?? posting.createdAt ?? "";
         const updated = posting.UpdatedAt ?? posting.updatedAt ?? "";
-        return { title, desc, city, district, category, price, created, updated };
+        return { title, desc, city, district, category, price, created, updated, postingId, providerId };
     }, [posting]);
 
     const vmProvider = useMemo(() => {
@@ -173,42 +179,52 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
     }
 
     async function handleCreateOrder(e) {
-        e.preventDefault();
-        setOrderError("");
-        setFlashMessage("");
-        if (!posting) return;
-        const providerId = posting.ProviderID ?? posting.providerId;
-        if (!providerId) {
-            setOrderError("Não foi possível identificar o prestador.");
+    e.preventDefault();
+    setOrderError("");
+    setFlashMessage("");
+    if (!posting) return;
+
+    const uid = getUid();
+    if (!uid) {
+        setOrderError("Usuário não identificado. Faça login novamente.");
+        return;
+    }
+
+    const providerId = posting.ProviderID ?? posting.providerId;
+    if (!providerId) {
+        setOrderError("Não foi possível identificar o prestador.");
+        return;
+    }
+
+    setOrderLoading(true);
+    try {
+        const body = {
+            postingId: posting.ID,
+            providerId: posting.ProviderID
+        };
+        const r = await fetch(`${apiBase}/orders`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(body)
+        });
+        console.log(body)
+        const raw = await r.text();
+        const j = raw ? JSON.parse(raw) : null;
+        if (!r.ok) {
+            setOrderError(j?.message || "Falha ao criar pedido.");
             return;
         }
-        setOrderLoading(true);
-        try {
-            const body = {
-                postingId: posting.ID ?? posting.id ?? id,
-                providerId: providerId
-            };
-            const r = await fetch(`${apiBase}/orders`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            });
-            const raw = await r.text();
-            const j = raw ? JSON.parse(raw) : null;
-            if (!r.ok) {
-                setOrderError("Falha ao criar pedido.");
-                return;
-            }
-            setOrder(j);
-            const status = normalizeStatus(j.Status ?? j.status ?? "PENDENTE");
-            pushHistory(status, "Pedido criado");
-            setFlashMessage("Pedido criado com sucesso. Aguarde o prestador aceitar.");
-        } catch {
-            setOrderError("Erro de conexão ao criar pedido.");
-        } finally {
-            setOrderLoading(false);
-        }
+        setOrder(j);
+        const status = normalizeStatus(j.Status ?? j.status ?? "PENDENTE");
+        pushHistory(status, "Pedido criado");
+        setFlashMessage("Pedido criado com sucesso. Aguarde o prestador aceitar.");
+    } catch {
+        setOrderError("Erro de conexão ao criar pedido.");
+    } finally {
+        setOrderLoading(false);
     }
+}
 
     async function reloadOrderById(orderId) {
         try {
@@ -263,8 +279,10 @@ export default function Service({ id, onBack, apiBase = "http://localhost:8080/a
         setFlashMessage("");
         setOrderLoading(true);
         try {
-            const r = await fetch(`${apiBase}/orders/${order.ID ?? order.id}/start`, {       
-                method: "POST"
+            const r = await fetch(`${apiBase}/orders`, {       
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ postingId: vmPosting.postingId, providerId: vmPosting.providerId })
             });
             if (!r.ok) {
                 setOrderError("Falha ao iniciar o pedido.");

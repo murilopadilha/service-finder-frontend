@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../styles/services.css";
 
-export default function MyServices({ onBack, apiBase = "http://localhost:8080/api/v1" }) {     // CHANGE API ENDPOINT IP
+export default function MyServices({ onBack, apiBase = "http://10.49.82.111:8080/api/v1" }) {     // CHANGE API ENDPOINT IP
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [posts, setPosts] = useState([]);
